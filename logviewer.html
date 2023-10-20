@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {font-family: courier, serif;font-size: 12px;}
+      input[type="text"]{font-size:12px;}
+      table,th,td{border: 1px solid black;}
+      br{line-height: 200%;}
+    </style>
+  </head>
+  <body bgcolor=#e6ffcc>
+    <table>
+      <tr>
+        <td>
+          <div style="line-height:200%;">
+          <input type="file" onchange="fnLoadFile();" id="idInputFile" />
+          <br><label>Hide</label> <input type="text" size=60 id="idRemoveLinesWithWords"/>
+          <br><label>Show</label> <input type="text" size=60 id="idShowLinesWithWords"/>
+        </div>
+        </td>
+        <td>
+          <div style="line-height:200%;">
+          <label>Highlight Words</label>
+          <br><input type="text" size=60 name="idHighlightWords" style="background-color:lightpink;"/>
+          <br><input type="text" size=60 name="idHighlightWords" style="background-color:lightgreen;"/>
+          <br><input type="text" size=60 name="idHighlightWords" style="background-color:lightblue;"/>
+          <br><input type="text" size=60 name="idHighlightWords" style="background-color:lightgray;"/>
+          <br><input type="text" size=60 name="idHighlightWords" style="background-color:palegoldenrod;"/>
+          </div>
+        </td>
+
+      </tr>
+    </table>
+          <br><input type="button" value="Apply Filter" onclick="onClickFilter();" />
+
+    <hr>
+    <span class="inner-pre" style="font-size: 11px">
+      <pre id="idOutput"></pre>
+    </span>
+    <script>
+      function onClickFilter(){
+        console.log(arguments.callee.name);
+
+        var idOutput = document.getElementById('idOutput').innerHTML;
+        var idRemoveLinesWithWords = document.getElementById("idRemoveLinesWithWords").value;
+        idOutput = fnRemoveLinesWithKeywords(idOutput, idRemoveLinesWithWords);
+
+        var idShowLinesWithWords = document.getElementById("idShowLinesWithWords").value;
+        idOutput = fnShowLinesWithKeywords(idOutput, idShowLinesWithWords);
+
+        var idHighlightWords = document.getElementsByName("idHighlightWords");
+        console.log(idHighlightWords.length);
+        for (var i = 0; i < idHighlightWords.length; i++){
+          var eHighlight = idHighlightWords[i];
+          idOutput = fnHighlightKeywords(idOutput, eHighlight.value, eHighlight.style.backgroundColor);
+        }
+
+        //idOutput = fnHighlightKeywords(idOutput, idHighlightWords1.value, idHighlightWords1.style.backgroundColor);
+        document.getElementById('idOutput').innerHTML=idOutput;
+
+      }
+
+      function fnLoadFile(){
+        console.log(arguments.callee.name);
+
+        var fileReader = new FileReader();
+        fileReader.onload = function () {
+            var textFromFileLoaded = fileReader.result;
+            //var filteredText = fnFilterText(textFromFileLoaded);
+            document.getElementById('idOutput').innerHTML=textFromFileLoaded;
+        };
+        var uiFileToLoad = document.getElementById("idInputFile").files[0];
+        fileReader.readAsText(uiFileToLoad, "UTF-8");
+      } // fnLoadFile
+
+      function fnFilterText(textData){
+        console.log(arguments.callee.name);
+        // highlight keywords
+        var newText = textData;
+        
+        newText = newText.replace(/ssutvSetActiveControl/gi,'<font style="background-color:lightblue;font-weight:bold;">$&</font>');
+        newText = newText.replace(/Hold2Search/gi,'<font style="background-color:orange;">$&</font>');
+
+        //newText = newText.replace(/^.*(SIMPLE_SETUP|SIMPLESETUP).*$/gim,'<font style="background-color:cyan">$&</font>');
+
+        newText = newText.replace(/^.*(rxData).*$/gim,'<font style="background-color:lightgreen">$&</font>');
+
+        // remove all lines with audio_hal in it
+        newText = newText.replace(/^.*(audio_hal|EpgSyncJobService|TvContractUtils|CTVChannelFilter|vendor.sys.gralloc.debug|PackageWatchdog|ExplicitHealthCheckController).*\r\n?/gim, '');
+
+        return newText;
+      }
+
+      function fnRemoveLinesWithKeywords(textData, keywords){
+        console.log(arguments.callee.name);
+
+        if (keywords == ''){
+          return textData;
+        }
+
+        // keywords example = "kernel|mtklogs|hello"
+        var newText = textData;
+        var oldWordRegEx = new RegExp("^.*("+keywords+").*\\n",'gim');
+        console.log(oldWordRegEx);
+        newText = newText.replace(oldWordRegEx,'');
+        return newText;
+      } // fnRemoveLinesWithKeywords
+
+      function fnShowLinesWithKeywords(textData, keywords){
+        console.log(arguments.callee.name);
+        if (keywords == ''){
+          return textData;
+        }
+
+        var newText = textData;
+        //var showLinesRegEx = new RegExp("^.+?(?=" + keywords + ").*\n", 'gim');
+        var showLinesRegEx = new RegExp("^.*("+keywords+").*\n",'gim');
+        //var oldWordRegEx = new RegExp("^.*("+(keywords)+").*\\n",'gim');
+        //console.log(showLinesRegEx);
+
+        newText = newText.match(showLinesRegEx); // regex match will return array
+        return newText.join("");  // convert array into big string
+      } // fnKeepLinesWithKeywords
+
+      function fnHighlightKeywords(textData, keywords, color){
+        console.log(arguments.callee.name);
+        if (keywords == ''){
+          return textData;
+        }
+
+        // keywords example = "kernel|mtklogs|hello"
+        var newText = textData;
+        var oldWordRegEx = new RegExp(keywords,'gi');
+        console.log(oldWordRegEx);
+        newText = newText.replace(oldWordRegEx,'<font style="background-color:'+color+';">$&</font>');
+        return newText;
+      }
+
+    </script>
+  </body>
+</html>
